@@ -1,0 +1,19 @@
+services:
+  ml-service:
+    build: .
+    image: ats-ml-service:latest
+    ports:
+      - "8000:8000"
+    environment:
+      CORS_ORIGINS: "http://localhost:5173,http://localhost:3000"
+      BUILD_ON_STARTUP: "false"
+    volumes:
+      # Mount data + artifacts so the large CSV stays out of the image and
+      # pre-built artifacts persist across container restarts.
+      - ./data:/app/data
+    # To scale horizontally on one host:  docker compose up --scale ml-service=3
+    # (put a load balancer / nginx in front for a single entry point).
+    deploy:
+      resources:
+        limits:
+          memory: 2g

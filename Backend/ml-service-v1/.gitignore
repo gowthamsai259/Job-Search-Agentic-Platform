@@ -1,0 +1,17 @@
+# Large data files (do NOT commit to git; GitHub limit is 100 MB)
+data/*.csv
+data/postings.csv
+data/postings_cleaned.csv
+
+# Generated model artifacts (rebuild with: python -m src.build_artifacts)
+data/artifacts/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment
+.env
+.venv/
+venv/

@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+.env
+.git/
+.gitignore
+*.md
+
+# Large raw data: don't bake into the image. Mount it or build artifacts separately.
+data/postings.csv
+data/postings_cleaned.csv
