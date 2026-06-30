@@ -5,6 +5,9 @@ FastAPI service that:
 - computes an **ATS score** (cosine similarity vs. the job description),
 - returns **recommended jobs** via TF-IDF + cosine similarity over a job-postings dataset.
 
+Job data is stored in **Supabase** (a table with `title`, `description`). The offline
+build step pulls it and fits the model into small artifacts.
+
 ## Project layout
 
 ```
@@ -14,16 +17,15 @@ ml-service-v1/
 ├── Dockerfile
 ├── docker-compose.yml
 ├── .dockerignore
-├── .env.example
+├── .env.example            # copy to .env and add Supabase creds
 ├── data/
-│   ├── postings_cleaned.csv     # input data (not baked into the image)
-│   └── artifacts/               # generated model artifacts (joblib)
+│   └── artifacts/          # generated model artifacts (joblib) - regenerable
 └── src/
-    ├── config.py           # env-driven settings
-    ├── data_cleaner.py     # offline CSV cleaning helpers
+    ├── config.py           # env-driven settings (incl. Supabase)
+    ├── data_source.py      # Supabase client + paginated job fetch
     ├── document_analyser.py# resume text extraction
     ├── recommender.py      # Recommender class (build / load / infer)
-    └── build_artifacts.py  # offline: fit model -> save artifacts
+    └── build_artifacts.py  # offline: fetch from Supabase -> fit -> save artifacts
 ```
 
 ## Why it scales
@@ -42,6 +44,9 @@ Run all commands from this folder (`Backend/ml-service-v1`).
 ```bash
 pip install -r requirements.txt
 
+# 0) Configure Supabase
+cp .env.example .env   # then edit SUPABASE_URL / SUPABASE_KEY / SUPABASE_TABLE
+
 # 1) Build model artifacts once (re-run when the data changes)
 python -m src.build_artifacts
 
@@ -54,7 +59,7 @@ Health check: `GET http://localhost:8000/`  •  Readiness: `GET /ready`
 ## Docker
 
 ```bash
-# Build artifacts on the host first (keeps the big CSV out of the image):
+# Build artifacts on the host first (keeps them out of the image):
 python -m src.build_artifacts
 
 # Build + run (mounts ./data so artifacts are visible inside the container)
@@ -78,5 +83,6 @@ docker compose up --scale ml-service=3
 
 ## Configuration
 
-All via environment variables (see `.env.example`): `DATA_DIR`, `ARTIFACTS_DIR`,
-`CLEANED_CSV`, `TFIDF_MAX_FEATURES`, `RECOMMEND_TOP_N`, `BUILD_ON_STARTUP`, `CORS_ORIGINS`.
+All via environment variables (see `.env.example`): `SUPABASE_URL`, `SUPABASE_KEY`,
+`SUPABASE_TABLE`, `SUPABASE_PAGE_SIZE`, `DATA_DIR`, `ARTIFACTS_DIR`,
+`TFIDF_MAX_FEATURES`, `RECOMMEND_TOP_N`, `BUILD_ON_STARTUP`, `CORS_ORIGINS`.

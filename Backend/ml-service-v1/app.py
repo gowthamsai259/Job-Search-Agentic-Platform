@@ -32,8 +32,8 @@ async def lifespan(app: FastAPI):
         logger.info("Loading recommender artifacts from %s", settings.artifacts_dir)
         recommender = Recommender.load(settings)
     elif settings.build_on_startup:
-        logger.warning("Artifacts not found - building from CSV (this is slow).")
-        recommender = Recommender.build_from_csv(settings)
+        logger.warning("Artifacts not found - building from Supabase (this is slow).")
+        recommender = Recommender.build_from_supabase(settings)
         recommender.save(settings)
     else:
         raise RuntimeError(

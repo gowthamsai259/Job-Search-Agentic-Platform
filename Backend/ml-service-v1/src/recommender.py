@@ -42,10 +42,14 @@ class Recommender:
     # Construction
     # ------------------------------------------------------------------
     @classmethod
-    def build_from_csv(cls, settings: Settings) -> "Recommender":
-        """Fit the model from the cleaned CSV. Used by the offline build step."""
-        # Only read the two columns we actually need -> far less memory.
-        df = pd.read_csv(settings.cleaned_csv, usecols=["title", "description"])
+    def build_from_dataframe(cls, df: pd.DataFrame, settings: Settings) -> "Recommender":
+        """Fit the model from a DataFrame with `title` and `description` columns.
+
+        Source-agnostic: works whether the rows came from Supabase or a CSV.
+        """
+        if df.empty or not {"title", "description"}.issubset(df.columns):
+            raise ValueError("Data must contain non-empty 'title' and 'description' columns.")
+
         df = df.dropna(subset=["title", "description"])
 
         text = df["title"].astype(str) + " " + df["description"].astype(str)
@@ -55,6 +59,23 @@ class Recommender:
         titles = df["title"].astype(str).tolist()
 
         return cls(vectorizer, job_vectors, titles)
+
+    @classmethod
+    def build_from_supabase(cls, settings: Settings) -> "Recommender":
+        """Fetch job rows from Supabase and fit the model."""
+        # Imported here to avoid importing the supabase client unless we build.
+        from src.data_source import fetch_jobs
+
+        records = fetch_jobs(settings)
+        if not records:
+            raise RuntimeError(
+                f"Supabase returned 0 rows from table '{settings.supabase_table}'. "
+                "Either the table is empty, or Row Level Security is blocking your key. "
+                "Fix: add a SELECT policy for the anon role, or use the service_role key "
+                "for the build."
+            )
+        df = pd.DataFrame.from_records(records)
+        return cls.build_from_dataframe(df, settings)
 
     @classmethod
     def load(cls, settings: Settings) -> "Recommender":

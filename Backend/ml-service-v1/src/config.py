@@ -7,6 +7,11 @@ ports, or tunables.
 import os
 from functools import lru_cache
 
+from dotenv import load_dotenv
+
+# Load variables from a local .env file (no-op if the file is absent).
+load_dotenv()
+
 
 class Settings:
     def __init__(self) -> None:
@@ -18,9 +23,16 @@ class Settings:
         self.artifacts_dir: str = os.getenv(
             "ARTIFACTS_DIR", os.path.join(self.data_dir, "artifacts")
         )
+        # Kept for optional offline/CSV fallback; primary source is Supabase.
         self.cleaned_csv: str = os.getenv(
             "CLEANED_CSV", os.path.join(self.data_dir, "postings_cleaned.csv")
         )
+
+        # Supabase: source of truth for job data (table with title, description).
+        self.supabase_url: str = os.getenv("SUPABASE_URL", "")
+        self.supabase_key: str = os.getenv("SUPABASE_KEY", "")
+        self.supabase_table: str = os.getenv("SUPABASE_TABLE", "postings_cleaned")
+        self.supabase_page_size: int = int(os.getenv("SUPABASE_PAGE_SIZE", "1000"))
 
         # Model tunables.
         self.max_features: int = int(os.getenv("TFIDF_MAX_FEATURES", "5000"))
