@@ -2,8 +2,7 @@ import React, { useState } from "react";
 
 import ResumeUploader from "./resumeuploader";
 import ResumeAnalysis from "./resumeanalysis";
-
-import "../../styles/resumehome.css";
+import { version1, version2, version3 } from "../../environment";
 
 const ResumeHome = () => {
   const [atsScore, setAtsScore] = useState(0);
@@ -13,7 +12,8 @@ const ResumeHome = () => {
 
   const handleAnalysis = async (
     file: File,
-    jobDescription: string
+    jobDescription: string,
+    version: string
   ) => {
     const formData = new FormData();
 
@@ -22,21 +22,54 @@ const ResumeHome = () => {
       "jobDescription",
       jobDescription
     );
+    formData.append("version", version);
+    let response;
+    switch(version) {
+      case "v1":
+       response = await fetch(
+          version1,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+        break;
+      case "v2":
+        response = await fetch(
+          version2,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+        break;
+      case "v3":
+        response = await fetch(
+          version3,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+        break;
+      default:
+        response = await fetch(
+          version1,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+        break;
+    }
 
-    const response = await fetch(
-      "http://localhost:8000/analyze-resume",
-      {
-        method: "POST",
-        body: formData,
-      }
-    );
 
     const data = await response.json();
 
-    setAtsScore(data.ats_score);
+    setAtsScore(data?.ats_score ?? 0);
 
     setRecommendations(
-      data.recommended_jobs
+      data?.recommended_jobs ?? []
     );
   };
 
