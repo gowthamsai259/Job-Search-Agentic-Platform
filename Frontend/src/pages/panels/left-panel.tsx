@@ -1,4 +1,4 @@
-import { FileText, Briefcase, Users } from "lucide-react";
+import { FileText, Briefcase, Sparkles } from "lucide-react";
 import React from "react";
 export default function LeftPanel({ selected, setSelected }) {
   const menus = [
@@ -13,9 +13,9 @@ export default function LeftPanel({ selected, setSelected }) {
       icon: Briefcase,
     },
     {
-      id: "recruiter",
-      name: "Recruiter Dashboard",
-      icon: Users,
+      id: "models",
+      name: "Model settings",
+      icon: Sparkles
     },
   ];
 
